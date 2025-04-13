@@ -1,0 +1,2 @@
+bash /volume1/web/web_leigh/pdfs/removeOldSchedules.sh > /volume1/web/web_leigh/pdfs/output.log
+touch output.log

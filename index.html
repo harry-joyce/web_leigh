@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leigh on Sea Life and Ministry Meeting Schedule</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="icon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="icon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="icon/favicon-16x16.png">
+    <link rel="manifest" href="icon/site.webmanifest">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        #pdf-viewer {
+            width: 100%;
+            border: 1px solid #ddd;
+        }
+        canvas {
+            display: block;
+            margin: 0 auto;
+            width: 100%;
+            height: auto;
+        }
+        .page-break {
+            page-break-before: always;
+            display: block;
+            height: 1px;
+            margin: 40px 0;
+        }
+        @media (min-width: 768px) {
+            canvas {
+                width: 60%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <p>Download links for monthly PDFs:</p>
+    <ul id="pdf-links-monthly"></ul>
+
+    <p>Weekly View:</p>
+    <div id="pdf-viewer"></div>
+
+    <!-- PDF.js Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
+    <script>
+        var weeklyJsonFilePath = 'pdfs/weeklyPdfs.json';
+        var monthlyJsonFilePath = 'pdfs/monthlyPdfs.json';
+
+        var pdfjsLib = window['pdfjs-dist/build/pdf'];
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.worker.min.js';
+
+        var viewer = document.getElementById('pdf-viewer');
+        var monthlyLinksContainer = document.getElementById('pdf-links-monthly');
+        var scale = 2.0;  // Scale for better clarity
+
+        // Function to render a single PDF
+        function renderPDF(url) {
+            return pdfjsLib.getDocument(url).promise.then(function(pdf) {
+                console.log('PDF loaded: ' + url);
+
+                var renderPageSequentially = function(pageNum) {
+                    return pdf.getPage(pageNum).then(function(page) {
+                        var viewport = page.getViewport({ scale: scale });
+                        var canvas = document.createElement('canvas');
+                        var context = canvas.getContext('2d');
+                        canvas.height = viewport.height;
+                        canvas.width = viewport.width;
+
+                        viewer.appendChild(canvas);
+
+                        return page.render({
+                            canvasContext: context,
+                            viewport: viewport
+                        }).promise.then(function() {
+                            var pageBreak = document.createElement('div');
+                            pageBreak.className = 'page-break';
+                            viewer.appendChild(pageBreak);
+                        });
+                    });
+                };
+
+                var pages = [];
+                for (var pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                    pages.push(renderPageSequentially(pageNum));
+                }
+                return pages.reduce(function(chain, pagePromise) {
+                    return chain.then(function() {
+                        return pagePromise;
+                    });
+                }, Promise.resolve());
+            });
+        }
+
+        // Fetch the JSON file with monthly PDFs
+        fetch(monthlyJsonFilePath)
+            .then(response => response.json())
+            .then(data => {
+                var monthlyPdfFiles = data.monthly;
+
+                // Create links for each monthly PDF
+                monthlyPdfFiles.forEach(function(pdfFile) {
+                    var listItem = document.createElement('li');
+                    var link = document.createElement('a');
+                    link.href = pdfFile;
+                    link.textContent = pdfFile.replace('pdfs/monthly/', '').replace('.pdf', '').charAt(0).toUpperCase() + pdfFile.replace('pdfs/monthly/', '').replace('.pdf', '').slice(1);
+                    link.target = '_blank';
+                    listItem.appendChild(link);
+                    monthlyLinksContainer.appendChild(listItem);
+                });
+            })
+            .catch(error => console.error('Error loading monthly PDFs:', error));
+
+        // Fetch the JSON file with weekly PDFs
+        fetch(weeklyJsonFilePath)
+            .then(response => response.json())
+            .then(data => {
+                var weeklyPdfFiles = data.weekly;
+
+                // Render all weekly PDFs sequentially
+                weeklyPdfFiles.reduce(function(chain, pdfFile) {
+                    return chain.then(function() {
+                        return renderPDF(pdfFile).catch(error => {
+                            console.error('Error rendering PDF:', pdfFile, error);
+                        });
+                    });
+                }, Promise.resolve());
+            })
+            .catch(error => console.error('Error loading weekly PDFs:', error));
+    </script>
+</body>
+</html>
