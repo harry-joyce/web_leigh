@@ -1,1 +1,5 @@
-{ "monthly": [ "pdfs/monthly/april.pdf" ] }
+{
+  "monthly": [
+    "pdfs/monthly/april.pdf","pdfs/monthly/may.pdf"
+  ]
+}

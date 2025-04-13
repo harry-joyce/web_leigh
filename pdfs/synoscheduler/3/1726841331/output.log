@@ -1,4 +1,0 @@
-/volume1/web/web_leigh/pdfs/removeOldSchedules.sh: line 20: ((: 09: value too great for base (error token is "09")
-/volume1/web/web_leigh/pdfs/removeOldSchedules.sh: line 30: tmp.json: Permission denied
-/volume1/web/web_leigh/pdfs/removeOldSchedules.sh: line 53: tmp.json: Permission denied
-touch: cannot touch 'output.log': Permission denied
