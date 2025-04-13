@@ -120,8 +120,19 @@
             .then(data => {
                 var weeklyPdfFiles = data.weekly;
 
-                // Render all weekly PDFs sequentially
-                weeklyPdfFiles.reduce(function(chain, pdfFile) {
+                // Filter weekly PDFs to include only those with dates in the current week or future
+                var today = new Date();
+                var filteredWeeklyPdfFiles = weeklyPdfFiles.filter(function(pdfFile) {
+                    var match = pdfFile.match(/(\d{4}-\d{2}-\d{2})/); // Extract date from file name
+                    if (match) {
+                        var fileDate = new Date(match[1]);
+                        return fileDate >= today; // Include only future or current week dates
+                    }
+                    return false;
+                });
+
+                // Render all filtered weekly PDFs sequentially
+                filteredWeeklyPdfFiles.reduce(function(chain, pdfFile) {
                     return chain.then(function() {
                         return renderPDF(pdfFile).catch(error => {
                             console.error('Error rendering PDF:', pdfFile, error);
