@@ -127,8 +127,8 @@
                 var filteredWeeklyPdfFiles = weeklyPdfFiles.filter(function(pdfFile) {
                     var match = pdfFile.match(/(\d{4}-\d{2}-\d{2})/); // Extract date from file name
                     if (match) {
-                        var fileDate = new Date(match[1]);
-                        return fileDate >= today; // Include only future or current week dates
+                        var fileDate = new Date(match[1] + 'T00:00:00'); // Ensure time is set to midnight
+                        return fileDate.getTime() >= today.getTime(); // Compare timestamps
                     }
                     return false;
                 });
