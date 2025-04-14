@@ -124,11 +124,19 @@
                 var today = new Date();
                 today.setHours(0, 0, 0, 0); // Reset time to midnight for accurate comparison
 
+                // Calculate the start and end of the current week (Monday to Sunday)
+                var currentWeekStart = new Date(today);
+                currentWeekStart.setDate(today.getDate() - today.getDay() + 1); // Set to Monday of the current week
+                var currentWeekEnd = new Date(currentWeekStart);
+                currentWeekEnd.setDate(currentWeekStart.getDate() + 6); // Set to Sunday of the current week
+
                 var filteredWeeklyPdfFiles = weeklyPdfFiles.filter(function(pdfFile) {
                     var match = pdfFile.match(/(\d{4}-\d{2}-\d{2})/); // Extract date from file name
                     if (match) {
-                        var fileDate = new Date(match[1] + 'T00:00:00'); // Ensure time is set to midnight
-                        return fileDate.getTime() >= today.getTime(); // Compare timestamps
+                        var fileDate = new Date(match[1]); // Parse the date from the filename
+                        fileDate.setHours(0, 0, 0, 0); // Reset time to midnight
+                        // Include PDFs for the current week or future dates
+                        return fileDate >= currentWeekStart && fileDate <= currentWeekEnd || fileDate > today;
                     }
                     return false;
                 });
